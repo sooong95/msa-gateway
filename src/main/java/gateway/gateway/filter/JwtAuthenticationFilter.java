@@ -20,7 +20,7 @@ import javax.crypto.SecretKey;
 @Component
 public class JwtAuthenticationFilter implements GlobalFilter {
 
-    @Value("${jwt.secret}")
+    @Value("${spring.jwt.secret}")
     private String secretKey;
 
     @Override
@@ -28,8 +28,19 @@ public class JwtAuthenticationFilter implements GlobalFilter {
 
         String path = exchange.getRequest().getURI().getPath();
 
-        if (path.equals("/member/join") || path.equals("/member/login")) {
-            return chain.filter(exchange); // 해당 경로는 필터를 적용하지 않는다.
+        switch (path) {
+            case "/member/join" -> {
+                return chain.filter(exchange); // 해당 경로는 필터를 적용하지 않는다.
+            }
+            case "/auth/login" -> {
+                return chain.filter(exchange);
+            }
+            case "/member/test" -> {
+                return chain.filter(exchange);
+            }
+            case "/" -> {
+                return chain.filter(exchange);
+            }
         }
 
         String token = extractToken(exchange);
@@ -60,6 +71,7 @@ public class JwtAuthenticationFilter implements GlobalFilter {
          * claimsJws.getPayload(): 토큰 본문의 claim(이메일, 권한 등)을 로깅.
          * 예외가 발생하면 유효하지 않은 토큰으로 간주하고 false 를 반환.
          */
+
         try {
             SecretKey key = Keys.hmacShaKeyFor(Decoders.BASE64URL.decode(secretKey));
             Jws<Claims> claimsJws = Jwts.parser().verifyWith(key).build().parseSignedClaims(token);
